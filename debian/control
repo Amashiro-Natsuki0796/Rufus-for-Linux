@@ -1,0 +1,63 @@
+Source: rufus-linux
+Section: utils
+Priority: optional
+Maintainer: Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ gcc,
+ make,
+ pkg-config,
+ libgtk-3-dev,
+ libglib2.0-dev,
+ libcurl4-openssl-dev,
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/pbatard/rufus
+
+Package: rufus-linux
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ pkexec,
+ dosfstools,
+ gdisk,
+Recommends:
+ ca-certificates,
+ lxpolkit | polkit-1-auth-agent | mate-polkit,
+ exfatprogs,
+ ntfs-3g,
+ parted,
+ syslinux,
+ syslinux-common,
+ udftools,
+Suggests:
+ wimtools,
+ p7zip-full,
+Description: USB formatting and bootable drive creation utility (Rufus port)
+ Rufus is a utility that helps format and create bootable USB flash drives,
+ such as USB keys/pendrives, memory sticks, and so on.
+ .
+ This package is a native Linux port of Rufus 4.15. It reuses the
+ platform-independent subsystems of the upstream source tree (the bundled
+ libcdio ISO9660/UDF parser, the ms-sys boot record writer and the bad blocks
+ scan algorithm) and replaces the Win32 layer with POSIX/Linux primitives.
+ .
+ It provides a command line tool (rufus) for scripting and servers, and a
+ GTK3 graphical interface (rufus-gtk) whose layout mirrors the original
+ Windows application.
+ .
+ No sudo is needed: starting the GUI immediately shows a polkit
+ authorisation dialog (via pkexec and a shipped policy file). If the user
+ cancels, the application falls back to a read-only mode where devices and
+ images can still be browsed and analysed.
+ .
+ Features: device enumeration, ISO/UDF image analysis, raw (DD) image
+ writing with read-back verification, MBR/GPT partition table creation,
+ FAT32/exFAT/NTFS/ext4/UDF formatting, PBR and MBR boot record writing via
+ ms-sys, bad blocks scanning and MD5/SHA1/SHA256/SHA512 checksums.
+ .
+ It can also detect processes holding the target device before a destructive
+ operation, download official ISO images from a built-in catalogue with
+ SHA256 verification, and create a trailing UEFI:NTFS partition so that UEFI
+ firmware can boot from an NTFS/exFAT volume.

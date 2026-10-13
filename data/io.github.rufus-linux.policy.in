@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD polkit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/software/polkit/policyconfig-1.dtd">
+<!--
+  Rufus for Linux 的 polkit 授权定义。
+
+  作用：让 pkexec 弹出的授权对话框显示本应用自己的名称与用途说明，
+  而不是 polkit 默认的 "Run a program as another user"。
+
+  两个 action 分别对应图形界面与命令行程序；polkit 通过
+  org.freedesktop.policykit.exec.path 注解把"要运行的程序路径"与
+  action 关联起来。
+
+  allow_gui=true 是必需的注解：pkexec 默认会清理环境变量，加上它才会
+  保留 DISPLAY / XAUTHORITY，图形界面才能出现在当前会话的屏幕上。
+
+  本文件由构建系统按安装前缀生成（@BINDIR@ 会被替换），
+  源模板见 data/io.github.rufus-linux.policy.in。
+-->
+<policyconfig>
+
+  <vendor>Rufus for Linux</vendor>
+  <vendor_url>https://github.com/pbatard/rufus</vendor_url>
+
+  <!-- 图形界面：启动时即请求授权 -->
+  <action id="io.github.rufus-linux.gui">
+    <description>运行 Rufus for Linux 图形界面</description>
+    <message>需要管理员权限才能格式化磁盘设备并向其写入数据</message>
+    <icon_name>rufus-linux</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">@BINDIR@/rufus-gtk</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+
+  <!-- 命令行：需要提权的子命令自动请求授权 -->
+  <action id="io.github.rufus-linux.cli">
+    <description>以管理员权限运行 rufus 命令行工具</description>
+    <message>需要管理员权限才能格式化磁盘设备并向其写入数据</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">@BINDIR@/rufus</annotate>
+  </action>
+
+</policyconfig>

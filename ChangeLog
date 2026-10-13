@@ -1,0 +1,161 @@
+Rufus for Linux 1.2.1 (2026-10-13)
+==================================
+
+修复 1.2.0 中两个在"逐条核对文档"时暴露的缺陷。
+
+* 修复：`rufus part --help`（以及任何"缺参数调用"）会先弹出授权对话框
+  - 提权拦截发生在参数校验之前，于是 `rufus part`、`rufus create --help`
+    这类调用会先 fork pkexec 请求授权，用户白等一场（在自动化环境里表现为挂死）
+  - 现在：`-h/--help` 提升为全局处理，在任何位置都只打印用法、不触发提权；
+    并新增 cmd_min_args()，在请求授权**之前**检查必需位置参数是否齐全，
+    缺参数直接提示用法并返回 1
+
+* 修复：`rufus download -n` 与全局 `-n`（--no-progress）选项冲突
+  - strip_global_flags() 会先把 `-n` 当作 no-progress 吃掉，
+    导致 download 的 `--no-verify` 短选项永远无法生效（且用户毫无察觉）
+  - 现将 download 的短选项改为 `-N`，长选项 `--no-verify` 不变
+
+* 文档：README 大幅扩写构建与使用两节
+  - 构建：按发行版给出依赖安装命令、编译/运行时依赖分表、
+    构建变量表、安装布局表、deb 打包、交叉编译、常见问题、回环设备调试法
+  - 使用：图形界面逐控件说明与操作流程、全部 12 个子命令的选项表与示例、
+    11 个典型场景、自动决策规则、退出码、16 条故障排查
+  - 修正 README 中残留的 `sudo` 示例（1.2.0 起已不需要）
+
+Rufus for Linux 1.2.0 (2026-10-13)
+==================================
+
+把提权方式从"必须先用 sudo 启动"改为 polkit 授权。
+
+* 新增：免 sudo 启动，打开软件即弹出系统授权对话框
+  - src/core/rf_privilege.c：提权探测、重新启动、退出码映射、防递归
+  - data/io.github.rufus-linux.policy.in：polkit action 模板，安装时按
+    安装前缀生成到 /usr/share/polkit-1/actions/
+      · exec.path 注解把 action 与 rufus-gtk / rufus 关联，对话框才能
+        显示本应用自己的图标与用途说明
+      · exec.allow_gui 注解让 pkexec 保留 DISPLAY / XAUTHORITY，
+        GUI 才能出现在当前会话
+  - GUI 在 gtk_init 之前请求授权；成功后由提权子进程接管，父进程退出
+  - CLI 对 write/create/format/badblocks/mbr/part 自动请求授权，
+    退出码透传；sudo 方式完全保留
+  - 新增 `rufus priv` 子命令显示权限状态与提权后端
+  - 新增 `--no-polkit` 开关（GUI 与 CLI）
+
+* 取消授权时的降级：图形界面进入**只读模式**
+  - 顶部插入警告横幅说明原因
+  - "开始"按钮置灰并给出工具提示
+  - 设备浏览、镜像分析、摘要计算、ISO 下载全部保持可用
+
+* 关键技术点
+  - "授权成功"用两阶段状态文件判定：父进程创建
+    /tmp/.rufus-linux-priv-<父pid>.state 并写入 waiting；提权后的子进程
+    （其 getppid() 恰为父进程 pid）覆写为 ready。之所以不用环境变量，
+    是因为 pkexec 会清理环境变量；之所以由父进程创建文件，是因为
+    /tmp 带 sticky 位，root 创建的文件普通用户删不掉会残留。
+  - pkexec 退出码 126（用户取消）/127（未授权）判定为拒绝
+
+* 修复：CLI 提权后丢失全局开关
+  - orig_argv 只是 argv 的指针别名，而 strip_global_flags() 会原地压缩
+    argv 数组，导致提权后的子进程看不到 -y / --quiet 等被剥离的开关
+    （表现为"传了 -y 仍弹出交互确认"）。改为深拷贝。
+
+* 修复：GUI 选项复选框重复挂载（1.1.0 引入）
+  - "可引导 U 盘"与"写后校验(DD)"先被加入一个从未挂载的中间容器，
+    再加入真正的容器，触发 GTK 断言失败且复选框不显示。已重写该行。
+
+* 其他
+  - 版本号提升至 1.2.0
+  - debian/control：Depends 新增 pkexec；Recommends 新增 polkit 认证代理
+  - 新增技术文档 07-polkit授权机制.md
+
+Rufus for Linux 1.1.0 (2026-10-13)
+==================================
+
+补齐三项上游能力，并修复 1.0.0 中的三个缺陷。
+
+* 新增：冲突进程检测（对应上游 src/process.c）
+  - 遍历 /proc/<pid>/fd 的符号链接，与设备节点及所有挂载点前缀比对
+  - 额外检查 /proc/<pid>/cwd、/proc/<pid>/exe、/proc/swaps
+  - 从 /proc/<pid>/fdinfo/N 的 flags 解析访问模式（只读/只写/读写）
+  - 5 类占用方式：打开块设备、打开挂载点文件、工作目录在设备上、
+    从设备运行程序、交换分区
+  - create/write/format 前自动扫描；仅"已挂载"可自动卸载处理，
+    其他占用一律拒绝；--no-conflict-check / --force 可放行
+  - 新增 `rufus ps [--json] <设备>` 子命令（退出码 2 表示有占用）
+  - GUI 新增"检测冲突进程"复选框（默认勾选）与占用进程对话框
+
+* 新增：在线下载 ISO（对应上游 src/net.c 的 DownloadISO）
+  - 上游依赖 PowerShell 脚本 Fido；Linux 无对应物，改为
+    内置 JSON 目录 + 原生 HTTP 下载器
+  - src/core/rf_http.c：libcurl 后端（编译期 pkg-config 探测），
+    缺失时回退 curl/wget 命令行
+  - 支持进度回调、断点续传（.part + rename）、重定向、代理、TLS
+  - src/core/rf_json.c：250 行极简 JSON 解析器（避免引入 JSON 库）
+  - src/core/rf_catalog.c：目录加载/查询/更新/下载/校验
+  - 内置目录 data/iso-catalog.json：53 条官方镜像，全部 URL 实测可访问，
+    size_bytes 与服务器 Content-Length 一致
+  - 校验和解析支持 5 种格式：coreutils 双列、coreutils `*` 标记、
+    BSD 风格 `SHA256 (file) = hash`、裸 hash、带路径前缀
+  - 新增 `rufus download` 子命令与 GUI"下载 ISO"对话框
+
+* 新增：UEFI:NTFS（对应上游 src/drive.c 的 XP_UEFI_NTFS）
+  - 直接复用上游 res/uefi/uefi-ntfs.img（1 MiB FAT12，含各架构 UEFI 驱动）
+  - src/core/rf_uefi_ntfs.c：镜像查找、布局计算、原样写入
+  - 分区属性与上游逐条一致：
+      MBR 类型 0xEF；GPT 类型用 MS Basic Data 而非 ESP GUID
+      （Windows 安装程序见到两块 ESP 会报错）；bit63 不分配盘符
+  - 触发条件：镜像可 UEFI 引导且文件系统为 NTFS/exFAT，
+    或 --uefi-ntfs 显式指定
+  - 新增 `rufus uefi-ntfs` 状态查询子命令与 GUI 复选框
+
+* 修复（1.0.0 中的真实缺陷）
+  - rf_part_write()：gen_guid() 写入 16 字节却传入 4 字节数组，
+    造成 12 字节栈缓冲区溢出。该分支在 disk_signature == 0 时必然执行，
+    而 CLI 默认即为 0 —— 默认路径一直在越界。已改为 r[16]。
+  - detect_system_disks()：用 strstr(line, " / ") 猜测 mountinfo 的挂载点，
+    实际命中的是 root 字段。在 ntfs-3g 等 FUSE 挂载（root = "/"）存在时，
+    会把完全无关的 U 盘误判为系统盘并拒绝操作。已改为按字段解析。
+  - rf_json.c 双重编码：字符串解析对非转义字节误用 utf8_put()，
+    把 UTF-8 字节当作 Latin-1 码点重新编码一次，导致目录中的
+    中文名显示为乱码。已改为原样复制，仅 \uXXXX 转义才编码。
+  - 冲突检测误报：path_matches_any() 的前缀匹配在 t == "/" 时
+    (t[n-1] == '/') 恒真，任何绝对路径都会命中，rufus ps /dev/sda
+    一次报出 183 个"占用者"。已改为要求路径分量边界，并从目标
+    路径集合中移除根挂载点 "/"。
+  - 设备节点识别：多处用 isdigit(dev[len(base)]) 判断分区，
+    无法识别 loop0p1 / nvme0n1p1 / mmcblk0p1 这类带 p 分隔符的命名，
+    导致回环设备与 NVMe 的分区不被列出。已统一为
+    rf_dev_is_partition_of()。
+
+* 其他
+  - 版本号提升至 1.1.0
+  - 构建依赖新增 libcurl4-openssl-dev（可选，缺失则用命令行后端）
+  - 数据文件安装到 /usr/share/rufus-linux/（uefi-ntfs.img、iso-catalog.json）
+  - 新增技术文档 06-扩展功能实现.md
+  - 第三方代码（libcdio / ms-sys）编译时关闭告警，自有代码保持零告警
+
+Rufus for Linux 1.0.0 (2026-10-13)
+==================================
+
+首个版本：把上游 Rufus 4.15 移植到 Linux。
+
+* 复用上游平台无关子系统
+  - libcdio ISO9660/UDF 解析（PVD、卷标、Joliet、Rock Ridge、目录项查询）
+  - ms-sys 引导记录写入（DOS/2000/Vista/Win7/Rufus/ReactOS/GRUB2/
+    GRUB4DOS/SYSLINUX/KolibriOS MBR 与 FAT12/16/32/NTFS PBR）
+  - badblocks 坏块检测算法（512 KiB 逻辑块、5 组互补模式、逐块收敛定位）
+* 新增 Linux 平台层
+  - /sys/block + /proc/self/mountinfo 设备枚举与系统盘识别
+  - 原生 MBR / GPT 分区表写入（含 GPT 头 CRC32、主备表、保护性 MBR）
+  - blkid/parted 兼容的几何探测与 BLKRRPART 分区重读
+  - mkfs.vfat / mkfs.exfat / mkfs.ntfs / mkfs.ext4 / mkudffs 参数映射
+  - 块设备直接 I/O、fsync + BLKFLSBUF 刷盘
+* 移植实现（替代 Win32 原语）
+  - CreateFile("\\\\.\\PhysicalDriveN") -> open("/dev/sdX")
+  - SetupAPI 枚举                     -> sysfs
+  - IOCTL_DISK_SET_DRIVE_LAYOUT_EX    -> 直接构造分区表扇区
+  - fmifs.dll FormatEx                -> mkfs.* 外部工具
+  - SetTimer 状态刷新                 -> 进度回调 + GTK 定时器
+* 用户界面
+  - rufus   : 命令行（list/info/checksum/write/create/format/badblocks/mbr/part）
+  - rufus-gtk: GTK3 图形界面，布局对齐 Windows 版 Rufus

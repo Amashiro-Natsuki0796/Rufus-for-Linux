@@ -1,0 +1,63 @@
+.\" Rufus for Linux 图形界面手册页
+.TH RUFUS-GTK 1 "2026-10-13" "Rufus for Linux 1.0.0" "用户命令"
+.ad l
+.SH 名称
+rufus-gtk \- Rufus for Linux 的 GTK3 图形界面
+.SH 概要
+.B sudo rufus-gtk
+.RI [ 镜像文件 ]
+.RI [ 选项 ]
+.SH 描述
+.B rufus-gtk
+是
+.BR rufus (1)
+的图形前端，界面布局与 Windows 版 Rufus 保持一致：设备下拉框、
+镜像选择、分区类型、目标系统、文件系\:统、簇大小、卷标、开始按钮、
+进度条与日志视图。
+.PP
+.B 不\:需\:要\:用
+.B sudo
+\:启\:动\:。
+\:程\:序\:会\:在\:启\:动\:时\:立\:即\:通\:过
+.B polkit
+\:弹\:出\:系\:统\:授\:权\:对\:话\:框\:；
+\:取\:消\:授\:权\:时\:降\:级\:为\:只\:读\:模\:式\:，
+\:仍\:可\:浏\:览\:设\:备\:、\:分\:析\:镜\:像\:、\:计\:算\:摘\:要\:、\:下\:载\: ISO\:，
+\:但\:不\:能\:写\:入\:。
+.SH 选项
+.TP
+.BI \-\-device " 路径"
+预选目标设备，例如
+.IR /dev/sdb 。
+.TP
+.B \-\-all
+列出包括非可移动设备在内的所有块设备\:。默认只列出可移动设备。
+.TP
+.BR \-y ", " \-\-yes
+跳过确认对话框，便于脚本化调用。
+.TP
+.B \-\-auto-start
+启动后自动开始写入，需与
+.B \-\-yes
+配合使用。
+.TP
+.B \-\-no\-polkit
+不请求系统授权，直接以只读模式启动。
+.TP
+.BR \-h ", " \-\-help
+显示帮助。
+.SH 示例
+.nf
+  rufus-gtk
+  rufus-gtk --device /dev/sdb ~/ubuntu-24.04.iso
+  rufus-gtk --all -y --auto-start --device /dev/sdb ~/win11.iso
+  sudo rufus-gtk                     # 传统方式仍然可用
+.fi
+.SH 警告
+"开始"按钮会不可恢复地销毁目标设备上\:的全部数据。
+.SH 参见
+.BR rufus (1)
+.SH 作者
+Rufus for Linux 基于 Pete Batard 的 Rufus 项目源码移植。
+.br
+许可证：GPL-3.0-or-later

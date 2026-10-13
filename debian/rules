@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+# Rufus for Linux -- debhelper 构建规则
+
+export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@ --buildsystem=makefile
+
+override_dh_auto_configure:
+	# 本项目使用纯 Makefile，无需 configure
+
+override_dh_auto_build:
+	$(MAKE) all OPT="-O2" VERSION_OVERRIDE=
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/rufus-linux PREFIX=/usr
+
+override_dh_auto_clean:
+	$(MAKE) clean || true
+	rm -rf build
+
+override_dh_strip:
+	dh_strip --dbgsym-migration='rufus-linux-dbgsym (>= 1.0.0-1)'
+

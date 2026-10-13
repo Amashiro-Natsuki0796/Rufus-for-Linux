@@ -1,0 +1,198 @@
+.\" Rufus for Linux -- 手册页
+.\" 基于上游 Rufus (https://github.com/pbatard/rufus) 源码移植
+.TH RUFUS 1 "2026-10-13" "Rufus for Linux 1.0.0" "用户命令"
+.ad l
+.SH 名称
+rufus \- 从镜像文件创建可引导 U 盘 / 格式化 USB 设备
+.SH 概要
+.B rufus
+.I 命令
+.RI [ 选项 ]
+.RI [ 参数 ]
+.SH 描述
+.B rufus
+\:不\:需\:要\:用
+.B sudo
+\:启\:动\:。
+\:需\:要\:写\:入\:块\:设\:备\:的\:子\:命\:令\:会\:自\:动\:通\:过
+.B polkit
+\:（\:pkexec\:）\:请\:求\:系\:统\:授\:权\:，
+\:弹\:出\:图\:形\:授\:权\:对\:话\:框\:。
+\:传\:统\:的
+.B sudo
+\:方\:式\:仍\:然\:完\:全\:可\:用\:。
+.PP
+.B sudo rufus-gtk
+\:已\:经\:不\:是\:必\:需\:的\:；
+\:直\:接\:运\:行
+.B rufus-gtk
+\:即\:会\:弹\:出\:授\:权\:对\:话\:框\:，
+\:取\:消\:授\:权\:则\:降\:级\:为\:只\:读\:模\:式\:。
+.PP
+.B rufus
+是 Rufus（Windows 平台上广受欢迎的 U 盘格式化与启动盘制作工具）到
+Linux 的原生移植版本。它复用了上游工程中平\:台无关的部分
+（libcdio 的 ISO9660/UDF 解析、ms-sys 的引导记录写入、坏块检测算法），
+并用 POSIX/Linux 原语重写了平台相关层（设备访问、分区\:表、格式化、GUI）。
+.PP
+程序提供两个可执行文件：
+.B rufus
+（命令行，适合脚本与服务器）和
+.B rufus-gtk
+（GTK3 图形界面，操作方式与 Windows 版 Rufus 一致）。
+.SH 命令
+.TP
+.B list
+列出系统中的块设备。默认只显示可移动\:设备。
+.TP
+.B info " 镜像"
+分析一个 ISO9660/UDF/磁盘映像：卷标、引导能力\:（BIOS/UEFI/El Torito）、
+是否为 Windows 安装盘、是否自带混合 MBR 等。
+.TP
+.B checksum " [选项] 文件"
+计算或比对摘要（MD5/SHA1/SHA256/SHA512\:）。
+.TP
+.B write " [选项] 镜像 设备"
+把镜像按字节原样写入设备（等价于 Rufus 的 DD 模式），可选写后读回校验。
+.TP
+.B create " [选项] 镜像 设备"
+完整的启动盘制作流程：清除分区表 → 创建 MBR/GPT → 格式化 → 写入分区
+引导记录 → 挂载镜像并复制内容 → 安装引导器 → 写入 MBR 引导代码。
+.TP
+.B format " [选项] 设备"
+格式化设备或分区为 FAT32/exFAT/NTFS/ext4/UDF。
+.TP
+.B badblocks " [选项] 设备"
+坏块检测（写模式 + 读回比对，与上游算法一致）。
+.TP
+.B mbr " [选项] 设备"
+写入主引导记录（MBR）或分区引导记录（PBR\:）。
+.TP
+.B part " [选项] 设备"
+重建分区表（原生写入 MBR 或 GPT，包括 GPT 头 CRC32 与备份表）。
+.TP
+.B ps " [选项] 设备"
+列出正在占用目标设备的进程（移植自上\:游 process.c 的句柄占用检测）。
+检测直接打开块设备、打开挂载点文件、\:工作目录在设备上、从设备运行程序、
+以及被用作交换分区等占用方式。退出码 2 表示发现占用。
+.TP
+.B download " [选项] [ID]"
+从官方源下载 ISO 镜像。内置 53 条目录条目，支持 libcurl 下载与
+官方 SHA256 校验。用
+.B --list
+列出条目，
+.B --update-catalog
+从网络更新目录。上游对应功能依赖 PowerShell 脚本 Fido，本移植改为
+自带 JSON 目录。
+.TP
+.B uefi-ntfs
+显示 UEFI:NTFS 驱动镜像的状态与分区属性。
+.TP
+.B priv
+显示当前权限状态、提权后端与 polkit 策略文件位置。
+.SH 全局选项
+.TP
+.BR \-q ", " \-\-quiet
+静默模式，只输出错误。
+.TP
+.BR \-v ", " \-\-verbose
+详细日志，重复两次输出跟踪级日志。
+.TP
+.BR \-n ", " \-\-no\-progress
+关闭进度条。
+.TP
+.BR \-y ", " \-\-yes
+跳过交互确认（危险操作请谨慎使用）。
+.TP
+.BR \-h ", " \-\-help
+显示帮助。
+.SH 写入选项
+.TP
+.B \-\-verify
+写完后读回并比对摘要。
+.TP
+.BI \-\-hash " 算法"
+校验算法，取 sha256（默认）/ sha1 / md5 / sha512。
+.TP
+.B \-\-force
+允许把非可移动设备（如整块 SATA 盘）作为目标。系统盘始终被拒绝。
+.SH 制作启动盘选项
+.TP
+.BI \-\-mode " auto|dd|iso"
+写入模式。auto 依镜像类型自动选择。
+.TP
+.BI \-\-target " both|bios|uefi"
+引导目标。
+.TP
+.BI \-\-scheme " mbr|gpt"
+分区方案。
+.TP
+.BI \-\-fs " fat32|exfat|ntfs|ext4|udf"
+目标文件系统。Windows 安装盘若 install.wim 超过 4 GiB，应选择 ntfs。
+.TP
+.BI \-\-label " 卷标"
+卷标，最长 11 字符（FAT）或 32 字符（NTFS/exFAT）。
+.TP
+.BI \-\-cluster " 字节"
+簇大小，0 表示自动（按容量阶梯推荐）。
+.TP
+.BI \-\-badblocks " 1..4"
+写入前执行 N 轮坏块检测。
+.TP
+.B \-\-no\-syslinux
+不安装 SYSLINUX 引导器。
+.SH 示例
+.nf
+  sudo rufus list
+  rufus info ubuntu-24.04-desktop-amd64.iso
+  sudo rufus write --verify ubuntu-24.04.iso /dev/sdb
+  sudo rufus create --target both ubuntu-24.04.iso /dev/sdb
+  sudo rufus create --fs ntfs --label WIN11 win11.iso /dev/sdb
+  sudo rufus format --fs exfat --label DATA /dev/sdb1
+  sudo rufus badblocks -p 2 --flash tlc /dev/sdb
+  sudo rufus mbr --type win7 --pbr fat32nt /dev/sdb
+  rufus ps /dev/sdb
+  rufus priv
+  rufus download --list ubuntu
+  rufus download ubuntu-2404-desktop-amd64 --dir ~/ISO
+  rufus create --fs ntfs --uefi-ntfs win11.iso /dev/sdb   # 自动请求授权
+  sudo rufus-gtk
+.fi
+.SH 退出状态
+.TP
+.B 0
+成功。
+.TP
+.B 1
+一般错误（参数错误、权限不足、设备不\:存在等）。
+.TP
+.B 2
+摘要校验不匹配。
+.TP
+.B 3
+写入后读回校验失败。
+.TP
+.B 4
+坏块检测发现坏块。
+.SH 警告
+.B rufus
+的写入、格式化、坏块检测等操作会
+.B 不可恢复地销毁目标设备上的全部数据
+。请务必通过
+.B rufus list
+确认设备路径。程序会拒绝把系统盘作为\:目标，但使用者仍须自行核对。
+.SH 文件
+.TP
+.I /usr/share/doc/rufus-linux/
+技术文档：上游源码分析、移植设计与构\:建指南。
+.SH 参见
+.BR dd (1),
+.BR mkfs.vfat (8),
+.BR sgdisk (8),
+.BR syslinux (1)
+.SH 作者
+Rufus for Linux 基于 Pete Batard 的 Rufus 项目源码移植。
+.br
+上游项目：https://github.com/pbatard/rufus
+.br
+许可证：GPL-3.0-or-later

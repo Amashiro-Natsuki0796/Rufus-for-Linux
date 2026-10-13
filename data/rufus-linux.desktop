@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Rufus for Linux
+Name[zh_CN]=Rufus U 盘制作工具
+GenericName=USB Formatting Utility
+GenericName[zh_CN]=U 盘格式化工具
+Comment=Create bootable USB drives from ISO images
+Comment[zh_CN]=从 ISO 镜像创建可引导 U 盘
+Exec=rufus-gtk
+Icon=rufus-linux
+Terminal=false
+Categories=Utility;System;GTK;
+Keywords=usb;boot;iso;format;rufus;
+Keywords[zh_CN]=U盘;启动盘;镜像;格式化;
+StartupNotify=true
+StartupWMClass=rufus-gtk

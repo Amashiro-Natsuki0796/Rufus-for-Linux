@@ -1,0 +1,20 @@
+Rufus for Linux -- 源码说明
+============================
+
+本项目是 Rufus (https://github.com/pbatard/rufus) 到 Linux 的移植。
+
+目录结构：
+  src/core/           Linux 平台层与核心逻辑
+  src/third_party/    从上游 Rufus 源码树移植过来的平台无关子模块
+                      - libcdio/  ISO9660 / UDF / 通用流驱动
+                      - mssys/    ms-sys：MBR 与分区引导记录写入
+  src/cli/            命令行程序
+  src/gui/            GTK3 图形界面
+  docs/               技术文档（中文）
+
+构建方式：
+  make                构建 CLI 与 GUI
+  make deb            生成 .deb 安装包
+  dpkg-buildpackage -b 等价方式
+
+移植说明请见 docs/02-Linux移植设计与实现.md。

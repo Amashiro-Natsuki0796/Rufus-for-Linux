@@ -1,0 +1,72 @@
+rufus-linux (1.2.1-1) unstable; urgency=medium
+
+  * 修复：`rufus part --help` 等"缺参数调用"会先弹出授权对话框
+      - 提权拦截早于参数校验，导致无谓的 pkexec 调用（自动化环境下挂死）
+      - `-h/--help` 提升为全局处理，不触发提权
+      - 新增必需参数检查，缺参数直接提示用法并返回 1
+  * 修复：`rufus download -n` 与全局 `-n`(--no-progress) 冲突，
+    导致 `--no-verify` 短选项失效；改用 `-N`
+  * 文档：README 扩写构建与使用两节（依赖分表、构建变量、安装布局、
+    全部子命令选项表与示例、典型场景、故障排查）
+
+ -- Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>  Tue, 13 Oct 2026 21:00:00 +0000
+
+rufus-linux (1.2.0-1) unstable; urgency=medium
+
+  * 新增：免 sudo 启动，打开软件即弹出 polkit 授权对话框
+      - 新增 polkit 策略文件 io.github.rufus-linux.policy
+        （exec.path 关联应用、allow_gui 保留 DISPLAY/XAUTHORITY）
+      - GUI 在 gtk_init 前请求授权；成功由提权子进程接管
+      - CLI 的 write/create/format/badblocks/mbr/part 自动请求授权
+      - 新增 `rufus priv` 子命令与 `--no-polkit` 开关
+      - sudo 启动方式完全保留
+  * 取消授权时图形界面降级为只读模式（横幅提示 + "开始"置灰），
+    设备浏览、镜像分析、摘要计算与 ISO 下载仍可用
+  * 修复：CLI 提权后丢失全局开关（orig_argv 为 argv 别名，
+    被 strip_global_flags 原地修改，导致 -y 失效）
+  * 修复：GUI 选项复选框重复挂载导致 GTK 断言失败且不显示
+  * debian/control：Depends 新增 pkexec；
+    Recommends 新增 polkit 认证代理
+
+ -- Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>  Tue, 13 Oct 2026 20:30:00 +0000
+
+rufus-linux (1.1.0-1) unstable; urgency=medium
+
+  * 新增：冲突进程检测（对应上游 process.c）
+      - 遍历 /proc/<pid>/fd 与 cwd/exe，识别直接打开块设备、
+        打开挂载点文件、工作目录在设备上、交换分区等占用方式
+      - 破坏性操作前自动扫描；仅"已挂载"可自动卸载处理，其他占用一律拒绝
+      - 新增 `rufus ps` 子命令与 --no-conflict-check / --force 开关
+  * 新增：在线下载 ISO（对应上游 net.c 的 DownloadISO）
+      - 上游依赖 PowerShell 脚本 Fido，移植版改为内置 JSON 目录 + 原生下载器
+      - 使用 libcurl（缺失时回退 curl/wget 命令行），支持断点续传与进度
+      - 内置 53 条官方镜像目录，全部 URL 实测可访问
+      - 支持多种官方校验和文件格式，下载后强制 SHA256 校验
+      - 新增 `rufus download` 子命令与 GUI 下载对话框
+  * 新增：UEFI:NTFS（对应上游 drive.c 的 XP_UEFI_NTFS）
+      - 复用上游 res/uefi/uefi-ntfs.img（1 MiB FAT12 UEFI 驱动镜像）
+      - NTFS/exFAT + 可 UEFI 引导时自动在盘尾添加小 FAT 分区
+      - GPT 类型使用 MS Basic Data 而非 ESP GUID，并设置不分配盘符属性
+  * 修复：rf_part_write() 中 gen_guid() 的 12 字节栈缓冲区溢出
+      （disk_signature 为 0 时必然触发，即 CLI 默认路径）
+  * 修复：detect_system_disks() 错误解析 /proc/self/mountinfo
+      （FUSE 挂载下会把普通 U 盘误判为系统盘并拒绝操作）
+  * 修复：统一设备节点识别，支持 loop0p1 / nvme0n1p1 / mmcblk0p1 命名
+  * 修复：rf_json.c 对非 ASCII 字符双重编码（把 UTF-8 字节当作
+    Latin-1 码点重新编码），导致目录中的中文名显示为乱码
+  * 修复：冲突进程检测的前缀匹配在根挂载点 "/" 上匹配所有绝对路径，
+    导致 rufus ps 对系统盘误报上百个占用者
+
+ -- Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>  Tue, 13 Oct 2026 16:00:00 +0000
+
+rufus-linux (1.0.0-1) unstable; urgency=medium
+
+  * 首次发布：基于上游 Rufus 4.15 源码的 Linux 原生移植
+  * 复用上游便携子系统：libcdio (ISO9660/UDF)、ms-sys (MBR/PBR)、
+    坏块检测算法（badblocks.c）
+  * 新增 Linux 平台层：sysfs/udev 设备枚举、原生 MBR/GPT 分区表写入、
+    mkfs.* 格式化封装、posix 块设备 I/O
+  * 提供命令行工具 rufus 与 GTK3 图形界面 rufus-gtk
+  * 支持 DD 原始写入与 ISO 解包两种模式，支持写后读回校验
+
+ -- Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>  Tue, 13 Oct 2026 12:00:00 +0000
