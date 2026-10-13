@@ -68,7 +68,7 @@ GUI_OBJ     := $(BUILD)/src/gui/main.o
 
 CORE_LIB    := $(BUILD)/librufuscore.a
 CLI_BIN     := $(BUILD)/rufus
-GUI_BIN     := $(BUILD)/rufus-gtk
+GUI_BIN     := $(BUILD)/rufus-gui
 
 .PHONY: all cli gui clean install uninstall deb check test
 
