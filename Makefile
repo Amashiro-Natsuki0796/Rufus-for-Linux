@@ -146,3 +146,6 @@ deb:
 
 clean:
 	rm -rf $(BUILD)
+	rm -rf debian/.debhelper debian/*.substvars debian/*.debhelper.log
+	rm -rf debian/files debian/debhelper-build-stamp
+	rm -f *.deb *.buildinfo *.changes

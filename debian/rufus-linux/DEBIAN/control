@@ -2,8 +2,8 @@ Package: rufus-linux
 Version: 1.2.1-1
 Architecture: amd64
 Maintainer: Rufus for Linux Port <rufus-linux-port@users.noreply.github.com>
-Installed-Size: 1682
-Depends: libc6 (>= 2.38), libcurl4t64 (>= 7.16.2), libglib2.0-0t64 (>= 2.32.0), libgtk-3-0t64 (>= 3.16.2), pkexec, dosfstools, gdisk
+Installed-Size: 1538
+Depends: libc6 (>= 2.34), libcurl4 (>= 7.16.2), libglib2.0-0 (>= 2.31.8), libgtk-3-0 (>= 3.16.2), pkexec, dosfstools, gdisk
 Recommends: ca-certificates, lxpolkit | polkit-1-auth-agent | mate-polkit, exfatprogs, ntfs-3g, parted, syslinux, syslinux-common, udftools
 Suggests: wimtools, p7zip-full
 Section: utils

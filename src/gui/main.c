@@ -740,7 +740,7 @@ static void on_dl_update(GtkButton *b, gpointer u)
     (void)b;
     gtk_label_set_text(GTK_LABEL(c->status), "正在更新目录…");
     while (gtk_events_pending()) gtk_main_iteration();
-    rc = rf_catalog_update("https://raw.githubusercontent.com/pbatard/rufus/master/res/iso-catalog.json",
+    rc = rf_catalog_update("https://raw.githubusercontent.com/Amashiro-Natsuki0796/Rufus-for-Linux/master/data/iso-catalog.json",
                            path, sizeof(path));
     if (rc != RF_OK) {
         gtk_label_set_text(GTK_LABEL(c->status),

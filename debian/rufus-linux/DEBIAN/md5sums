@@ -1,5 +1,5 @@
-40c3240d3862f36a930a92aaf7faf5ee  usr/bin/rufus
-afd671893bb3dab164d703273d52569b  usr/bin/rufus-gtk
+8a8c67df39221a340ebde4d10cf6d1e3  usr/bin/rufus
+e038822845446d4b1b68de26e70d3c1d  usr/bin/rufus-gtk
 6b892fa52335c1eb2fb73476c1aaa338  usr/share/applications/rufus-linux.desktop
 b16abe94f3bb6ccbb3631239f7a190f7  usr/share/doc/rufus-linux/01-Rufus源码架构分析.md.gz
 8b8745a04b7774eeb33ea02bea93eb58  usr/share/doc/rufus-linux/02-Linux移植设计与实现.md.gz
@@ -9,9 +9,8 @@ b16abe94f3bb6ccbb3631239f7a190f7  usr/share/doc/rufus-linux/01-Rufus源码架构
 1255322db466fc173c72cba23976c3a5  usr/share/doc/rufus-linux/06-扩展功能实现.md.gz
 4836f50dfed8360810ce021ddd0174fe  usr/share/doc/rufus-linux/07-polkit授权机制.md.gz
 4b5afb72de9aa06024f58425818a6044  usr/share/doc/rufus-linux/LICENSE.txt.gz
-1fc5bb3d0de93931c2e94085a6df7226  usr/share/doc/rufus-linux/README.md.gz
+222506cd14e49430b6c90a8b5600bf3b  usr/share/doc/rufus-linux/README.md.gz
 560a9aaf37466e3c6a191b41fcd57e14  usr/share/doc/rufus-linux/changelog.Debian.gz
-9fa5727b75bd9edab5f97ffc0994cc23  usr/share/doc/rufus-linux/changelog.gz
 9f628881eada82a748b7220ddb7ad2a7  usr/share/doc/rufus-linux/copyright
 8fefd2bf8f73e9655864461900e0c609  usr/share/icons/hicolor/256x256/apps/rufus-linux.png
 17acb2f90f60c46c0927467355ed0ff3  usr/share/man/man1/rufus-gtk.1.gz
